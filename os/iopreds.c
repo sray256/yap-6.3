@@ -184,6 +184,7 @@ static int EOFGetc(int sno) {
 }
 
 static void unix_upd_stream_info(StreamDesc *s) {
+  CACHE_REGS
   if (s->status & InMemory_Stream_f) {
     s->status |= Seekable_Stream_f;
     return;
@@ -413,6 +414,7 @@ void Yap_InitStdStreams(void) { InitStdStreams(); }
 
 Int PlIOError__(const char *file, const char *function, int lineno,
                 yap_error_number type, Term culprit, ...) {
+  CACHE_REGS
   if (trueLocalPrologFlag(FILEERRORS_FLAG) ||
       type == RESOURCE_ERROR_MAX_STREAMS /* do not catch resource errors */) {
     va_list args;
@@ -440,10 +442,11 @@ Int PlIOError__(const char *file, const char *function, int lineno,
 bool
  UnixIOError__(const char *file, const char *function, int lineno,
                 int error, io_kind_t io_type, Term culprit, ...) {
+  CACHE_REGS
   if (trueLocalPrologFlag(FILEERRORS_FLAG) ) {
     va_list args;
     const char *format;
-    char *who = Malloc(1024);
+    char *who = Malloc(1024 PASS_REGS);
     yap_error_number e_type;
 
     va_start(args, culprit);
@@ -1127,6 +1130,7 @@ static int check_bom(int sno, StreamDesc *st) {
 bool Yap_initStream(int sno, FILE *fd, Atom name, const char *io_mode,
                     Term file_name, encoding_t encoding, stream_flags_t flags,
                     void *vfs) {
+  CACHE_REGS
   // fprintf(stderr,"+ %s --> %d\n", name, sno);
   StreamDesc *st = &GLOBAL_Stream[sno];
   __android_log_print(
@@ -1321,6 +1325,7 @@ static const param_t open_defs[] = {OPEN_DEFS()};
 
 static bool fill_stream(int sno, StreamDesc *st, Term tin, const char *io_mode,
                         Term user_name, encoding_t enc) {
+  CACHE_REGS
   struct vfs *vfsp = NULL;
   const char *fname;
 

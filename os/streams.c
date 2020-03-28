@@ -336,6 +336,7 @@ bool Yap_SetCurInpPos(
 }
 
 Atom Yap_guessFileName(FILE *file, int sno, size_t max) {
+  CACHE_REGS
   if (!file) {
     Atom at = Yap_LookupAtom("mem");
     return at;
@@ -349,7 +350,7 @@ Atom Yap_guessFileName(FILE *file, int sno, size_t max) {
   int i = push_text_stack();
 #if __linux__
   size_t maxs = Yap_Max(1023, max - 1);
-  char *path = Malloc(1024), *nameb = Malloc(maxs + 1);
+  char *path = Malloc(1024 PASS_REGS), *nameb = Malloc(maxs + 1 PASS_REGS);
   size_t len;
   if ((len = snprintf(path, 1023, "/proc/self/fd/%d", f)) >= 0 &&
       (len = readlink(path, nameb, maxs)) > 0) {
@@ -1124,6 +1125,7 @@ static Int current_input(USES_REGS1) { /* current_input(?Stream) */
 }
 
 bool Yap_SetInputStream(Term sd) {
+  CACHE_REGS
   int sno = Yap_CheckStream(sd, Input_Stream_f, "set_input/1");
   if (sno < 0)
     return false;
@@ -1202,6 +1204,7 @@ bool Yap_SetOutputStream(Term sd) {
 }
 
 bool Yap_SetErrorStream(Term sd) {
+  CACHE_REGS
   int sno =
       Yap_CheckStream(sd, Output_Stream_f | Append_Stream_f, "set_error/2");
   if (sno < 0)
