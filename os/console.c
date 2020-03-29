@@ -88,7 +88,12 @@ bool is_same_tty(FILE *f1, FILE *f2) {
 
 static Int is_same_tty2(USES_REGS1) { /* 'prompt(Atom)                 */
   int sni = Yap_CheckStream(ARG1, Input_Stream_f, "put/2");
+  if (sni < 0) return false;
   int sno = Yap_CheckStream(ARG2, Output_Stream_f, "put/2");
+  if (sno < 0) {
+    UNLOCK(GLOBAL_Stream[sni].streamlock);
+    return false;
+  }
   bool out = (GLOBAL_Stream[sni].status & Tty_Stream_f) &&
              (GLOBAL_Stream[sno].status & Tty_Stream_f) &&
              is_same_tty(GLOBAL_Stream[sno].file, GLOBAL_Stream[sni].file);

@@ -108,6 +108,7 @@ static void CloseStream(int sno);
 
 FILE *Yap_GetInputStream(Term t, const char *msg) {
   int sno = Yap_CheckStream(t, Input_Stream_f, msg);
+  if (sno < 0) return NULL;
   FILE *rc;
 
   if (!(GLOBAL_Stream[sno].status &
@@ -121,6 +122,7 @@ FILE *Yap_GetInputStream(Term t, const char *msg) {
 
 FILE *Yap_GetOutputStream(Term t, const char *msg) {
   int sno = Yap_CheckStream(t, Output_Stream_f, msg);
+  if (sno < 0) return NULL;
   FILE *rc;
 
   if (!(GLOBAL_Stream[sno].status & (Tty_Stream_f | Socket_Stream_f)))
@@ -804,7 +806,6 @@ static Int stream_property(USES_REGS1) { /* Init current_stream */
     i = Yap_CheckStream(t1, Input_Stream_f | Output_Stream_f | Append_Stream_f,
                         "current_stream/3");
     if (i < 0) {
-      UNLOCK(GLOBAL_Stream[i].streamlock);
       Yap_ThrowError(LOCAL_Error_TYPE, t1, "bad stream descriptor");
       return false; // error...
     }
@@ -1577,6 +1578,10 @@ static Int p_stream_select(USES_REGS1) {
 
     Head = HeadOfTerm(t1);
     sno = Yap_CheckStream(Head, Input_Stream_f, "stream_select/3");
+    if (sno < 0) {
+      Yap_Error(SYSTEM_ERROR_INTERNAL, TermNil, "stream_select/3");
+       return (FALSE);
+    }
     fd = GetStreamFd(sno);
     if (FD_ISSET(fd, &readfds))
       tout = MkPairTerm(Head, tout);
@@ -1593,6 +1598,7 @@ static Int p_stream_select(USES_REGS1) {
 Int Yap_StreamToFileNo(Term t) {
   int sno =
       Yap_CheckStream(t, (Input_Stream_f | Output_Stream_f), "StreamToFileNo");
+  if (sno < 0) return -1;
   if (GLOBAL_Stream[sno].status & Pipe_Stream_f) {
     UNLOCK(GLOBAL_Stream[sno].streamlock);
     return (GLOBAL_Stream[sno].u.pipe.fd);

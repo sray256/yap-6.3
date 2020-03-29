@@ -1172,8 +1172,7 @@ static Int format(Term tf, Term tas, Term tout USES_REGS) {
   } else {
       output_stream = Yap_CheckStream(tout, Output_Stream_f, "format/3");
   }
-  if (output_stream == -1) {
-    UNLOCK(GLOBAL_Stream[output_stream].streamlock);
+  if (output_stream < 0) {
     return false;
   } else {
     out = doformat(tf, tas, output_stream PASS_REGS);

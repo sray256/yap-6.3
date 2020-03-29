@@ -934,7 +934,6 @@ static Int skip(USES_REGS1) { /* '$skip'(Stream,N)                     */
 static Int flush_output(USES_REGS1) { /* flush_output(Stream)          */
   int sno = Yap_CheckStream(ARG1, Output_Stream_f, "flush_output/1");
   if (sno < 0) {
-    UNLOCK(GLOBAL_Stream[sno].streamlock);
     return (FALSE);
   }
   yap_fflush(sno);

@@ -1804,6 +1804,9 @@ int Yap_FileStream(FILE *fd, Atom name, Term file_name, int flags,
 #define CheckStream(arg, kind, msg)                                            \
   CheckStream__(__FILE__, __FUNCTION__, __LINE__, arg, kind, msg)
 
+/* If there is no error, the stream lock has been acquired and must be released
+   by the caller.
+*/
 static int CheckStream__(const char *file, const char *f, int line, Term arg,
                          int kind, const char *msg) {
   int sno = -1;
@@ -1827,11 +1830,8 @@ static int CheckStream__(const char *file, const char *f, int line, Term arg,
       }
     }
     if ((sno = Yap_CheckAlias(sname)) < 0) {
-      UNLOCK(GLOBAL_Stream[sno].streamlock);
       PlIOError__(file, f, line, EXISTENCE_ERROR_STREAM, arg, msg);
       return -1;
-    } else {
-      LOCK(GLOBAL_Stream[sno].streamlock);
     }
   } else if (IsApplTerm(arg) && FunctorOfTerm(arg) == FunctorStream) {
     arg = ArgOfTerm(1, arg);
@@ -1843,21 +1843,22 @@ static int CheckStream__(const char *file, const char *f, int line, Term arg,
     Yap_Error(DOMAIN_ERROR_STREAM_OR_ALIAS, arg, msg);
     return -1;
   }
+  LOCK(GLOBAL_Stream[sno].streamlock);
   if (GLOBAL_Stream[sno].status & Free_Stream_f) {
     PlIOError__(file, f, line, EXISTENCE_ERROR_STREAM, arg, msg);
+    UNLOCK(GLOBAL_Stream[sno].streamlock);
     return -1;
   }
-  LOCK(GLOBAL_Stream[sno].streamlock);
   if ((GLOBAL_Stream[sno].status & Input_Stream_f) &&
       !(kind & Input_Stream_f)) {
-    UNLOCK(GLOBAL_Stream[sno].streamlock);
     PlIOError__(file, f, line, PERMISSION_ERROR_OUTPUT_STREAM, arg, msg);
+    UNLOCK(GLOBAL_Stream[sno].streamlock);
     return -1;
   }
   if ((GLOBAL_Stream[sno].status & (Append_Stream_f | Output_Stream_f)) &&
       !(kind & Output_Stream_f)) {
-    UNLOCK(GLOBAL_Stream[sno].streamlock);
     PlIOError__(file, f, line, PERMISSION_ERROR_INPUT_STREAM, arg, msg);
+    UNLOCK(GLOBAL_Stream[sno].streamlock);
     return -1;
   }
   return sno;
