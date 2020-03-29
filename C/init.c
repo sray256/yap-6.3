@@ -1004,7 +1004,7 @@ static void InitStdPreds(struct yap_boot_params *yapi)
   Yap_InitCPreds();
   Yap_InitBackCPreds();
   BACKUP_MACHINE_REGS();
-  Yap_InitFlags(false);
+  Yap_InitFlags(yapi->boot_file_type == YAP_PL || yapi->boot_file_type == YAP_SOURCE_PL);
   Yap_InitPlIO(yapi);
 #if HAVE_MPE
   Yap_InitMPE();
